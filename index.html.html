@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Enredo">
+<meta name="theme-color" content="#0f0f12">
+<title>Enredo</title>
+<style>
+:root{--bg:#0f0f12;--panel:#17171c;--line:#26262e;--txt:#ececf1;--mut:#8b8b99;--acc:#c8a2ff;--user:#2a2440;--ai:#1b1b22;--danger:#ff6b6b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:16px/1.55 -apple-system,system-ui,"Segoe UI",sans-serif;overscroll-behavior:none}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:820px;margin:0 auto;position:relative}
+header{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;border-bottom:1px solid var(--line)}
+header h1{flex:1;font-size:16px;font-weight:600;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.ib{background:none;border:0;color:var(--txt);font-size:20px;width:40px;height:40px;border-radius:10px}
+.ib:active{background:var(--line)}
+#msgs{flex:1;overflow-y:auto;padding:14px 12px 8px;-webkit-overflow-scrolling:touch}
+.m{margin:0 0 14px;display:flex;flex-direction:column}
+.m .b{padding:10px 14px;border-radius:16px;max-width:92%;word-wrap:break-word;overflow-wrap:anywhere}
+.m.u{align-items:flex-end}.m.u .b{background:var(--user);border-bottom-right-radius:4px}
+.m.a .b{background:var(--ai);border:1px solid var(--line);border-bottom-left-radius:4px}
+.b em{color:#d8c4f5}
+.dots::after{content:"●●●";letter-spacing:3px;color:var(--acc);animation:bl 1s infinite;font-size:10px}
+@keyframes bl{50%{opacity:.2}}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:6px 12px;border-radius:999px;font-size:13px}
+.chip:active{background:var(--line)}
+.empty{text-align:center;color:var(--mut);margin:18vh 20px 0}
+.empty h2{color:var(--txt);margin:0 0 6px}
+.atts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.ai{max-width:100%;max-height:260px;border-radius:12px;display:block;background:#0004}
+.av{max-width:100%;max-height:300px;border-radius:12px;display:block;background:#000}
+.file{background:#0003;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 10px;text-align:left;font:inherit;font-size:13px}
+.file small{color:var(--mut);margin-left:4px}
+#tray{display:none;gap:8px;overflow-x:auto;padding:8px 12px 0}
+.pi{position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--panel);border:1px solid var(--line);flex:none}
+.pi img,.pi video{width:100%;height:100%;object-fit:cover;display:block}
+.pi.proc{opacity:.5}
+.pi .x{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:#000b;color:#fff;font-size:14px;line-height:1;padding:0}
+.fi{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-size:22px}
+.fi small{font-size:9px;color:var(--mut);max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bar{display:flex;gap:8px;align-items:flex-end;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);background:var(--bg)}
+#clip{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--txt);font-size:20px;flex:none}
+#inp{flex:1;resize:none;max-height:160px;min-height:44px;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:22px;padding:10px 16px;font:inherit;outline:none}
+#send{width:44px;height:44px;border-radius:50%;border:0;background:var(--acc);color:#1a1226;font-size:20px;font-weight:700;flex:none}
+#send.stop{background:var(--danger);color:#fff}
+#drawer{position:fixed;inset:0;z-index:20;display:none}
+#drawer.on{display:block}
+#drawer .sh{position:absolute;inset:0;background:#0008}
+#drawer .pn{position:absolute;left:0;top:0;bottom:0;width:min(86vw,330px);background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#list{flex:1;overflow-y:auto;padding:8px}
+.it{display:flex;align-items:center;gap:6px;padding:12px;border-radius:12px}
+.it.on{background:var(--line)}
+.it .t{flex:1;overflow:hidden}
+.it .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .t small{color:var(--mut)}
+.dft{padding:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;padding-bottom:calc(env(safe-area-inset-bottom) + 10px)}
+.btn{background:var(--acc);color:#1a1226;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:600}
+.btn.s{background:var(--line);color:var(--txt)}
+.btn.d{background:none;color:var(--danger);border:1px solid var(--danger)}
+.btn:disabled{opacity:.5}
+dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:18px;padding:0;width:min(94vw,560px);max-height:92dvh}
+dialog::backdrop{background:#000a}
+dialog form{display:flex;flex-direction:column;gap:10px;padding:16px;max-height:92dvh;overflow-y:auto}
+dialog h3{margin:0}
+label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+label.ck{flex-direction:row;align-items:center;gap:8px;color:var(--txt);font-size:15px}
+label.ck input{width:auto}
+input,textarea,select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;width:100%}
+textarea{min-height:90px;resize:vertical}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.note{font-size:12.5px;color:var(--mut)}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;display:none;z-index:50;max-width:90vw}
+#lb{position:fixed;inset:0;background:#000e;z-index:60;display:none;align-items:center;justify-content:center}
+#lb img{max-width:96vw;max-height:92dvh;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="ib" id="menu" aria-label="Menu">☰</button>
+    <h1 id="title">Enredo</h1>
+    <button class="ib" id="edit" aria-label="Editar história">✎</button>
+  </header>
+  <div id="msgs"></div>
+  <div id="tray"></div>
+  <div id="bar">
+    <button id="clip" aria-label="Anexar">📎</button>
+    <textarea id="inp" rows="1" placeholder="Escreva o que seu personagem faz ou diz…"></textarea>
+    <button id="send" aria-label="Enviar">↑</button>
+  </div>
+</div>
+
+<div id="drawer"><div class="sh"></div><div class="pn">
+  <div style="padding:14px 14px 6px"><b style="font-size:18px">Enredo</b><div class="note" id="usage">Tudo salvo só neste aparelho</div></div>
+  <div style="padding:8px"><button class="btn" id="new" style="width:100%">+ Nova história</button></div>
+  <div id="list"></div>
+  <div class="dft">
+    <div class="row"><button class="btn s" id="exp">Exportar</button><button class="btn s" id="imp">Importar</button></div>
+    <button class="btn s" id="cfg">Configurações de IA</button>
+  </div>
+</div></div>
+
+<dialog id="dStory"><form method="dialog" id="fStory">
+  <h3 id="dsT">Nova história</h3>
+  <label>Título<input id="sTitle" required></label>
+  <label>Cenário / ambientação<textarea id="sWorld" placeholder="Onde e quando se passa, clima, regras do mundo…"></textarea></label>
+  <label>Meu personagem (a IA nunca controla)<textarea id="sMe" placeholder="Nome, idade (adulto), aparência, personalidade…"></textarea></label>
+  <label>Personagens da IA (ficha de cada um)<textarea id="sChars" style="min-height:150px" placeholder="Nome — idade (adulto) — personalidade, desejos, medos, segredos, objetivos, como fala…"></textarea></label>
+  <label>Tom e estilo<textarea id="sStyle" style="min-height:60px" placeholder="Ex.: slow burn, 3ª pessoa, parágrafos longos, tensão psicológica…"></textarea></label>
+  <label>Memória da história (resumo automático, editável)<textarea id="sMem" style="min-height:110px"></textarea></label>
+  <div class="row"><button class="btn" value="ok" id="sOk">Salvar</button><button class="btn s" value="cancel" formnovalidate>Cancelar</button></div>
+  <button class="btn d" type="button" id="sDel" style="display:none">Apagar esta história</button>
+</form></dialog>
+
+<dialog id="dCfg"><form method="dialog" id="fCfg">
+  <h3>Configurações de IA</h3>
+  <label>Provedor
+    <select id="cProv"><option value="anthropic">Anthropic (Claude)</option><option value="openai">Compatível com OpenAI (OpenRouter etc.)</option></select>
+  </label>
+  <label>Chave de API<input id="cKey" type="password" autocomplete="off" placeholder="sk-…"></label>
+  <label>Modelo (precisa aceitar imagens)<input id="cModel" placeholder="claude-sonnet-5-5"></label>
+  <label>URL base (opcional)<input id="cBase" placeholder="https://api.anthropic.com  ou  https://openrouter.ai/api/v1"></label>
+  <div class="row"><label>Máx. tokens por resposta<input id="cMax" type="number" value="1500"></label>
+  <label>Contexto enviado (caracteres)<input id="cCtx" type="number" value="48000"></label></div>
+  <label>Mídias recentes enviadas à IA (fotos, quadros de vídeo, PDFs)<input id="cMedia" type="number" value="6"></label>
+  <div class="note">A chave fica guardada apenas neste aparelho e só é enviada ao provedor escolhido. As mídias mais antigas continuam salvas aqui, mas deixam de ser reenviadas à IA para economizar. O provedor aplica as próprias políticas de conteúdo; o app não consegue removê-las.</div>
+  <div class="row"><button class="btn" value="ok">Salvar</button><button class="btn s" value="cancel" formnovalidate>Fechar</button></div>
+</form></dialog>
+
+<dialog id="dExp"><form method="dialog">
+  <h3>Exportar backup</h3>
+  <label class="ck"><input type="checkbox" id="xF" checked> Incluir fotos e arquivos</label>
+  <label class="ck"><input type="checkbox" id="xV"> Incluir vídeos (pode ficar enorme)</label>
+  <div class="note" id="xS">Histórias, personagens e memória sempre são incluídos.</div>
+  <div class="row"><button class="btn" type="button" id="xGo">Gerar backup</button><button class="btn s" value="cancel">Fechar</button></div>
+</form></dialog>
+
+<dialog id="dAge"><form method="dialog">
+  <h3>Conteúdo para adultos</h3>
+  <div>Este app é destinado a maiores de 25 anos e a ficção entre personagens adultos. Confirme para continuar.</div>
+  <button class="btn" value="ok">Tenho 25 anos ou mais</button>
+</form></dialog>
+
+<input type="file" id="file" accept="application/json" style="display:none">
+<input type="file" id="att" multiple style="display:none">
+<div id="lb"><img alt=""></div>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+let db,stories=[],cur=null,ctl=null,busy=false,pending=[],renderT=0;
+
+/* ---------- storage (IndexedDB) ---------- */
+const idb=()=>new Promise((res,rej)=>{
+  const r=indexedDB.open('enredo',2);
+  r.onupgradeneeded=()=>{const d=r.result;
+    if(!d.objectStoreNames.contains('stories'))d.createObjectStore('stories',{keyPath:'id'});
+    if(!d.objectStoreNames.contains('media'))d.createObjectStore('media',{keyPath:'id'})};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const rq=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const os=m=>db.transaction('stories',m).objectStore('stories');
+const ms=m=>db.transaction('media',m).objectStore('media');
+const putMedia=(id,blob)=>rq(ms('readwrite').put({id,blob}));
+const getMedia=async id=>{const r=await rq(ms('readonly').get(id));return r&&r.blob};
+const delMedia=async id=>{urlCache.delete(id);try{await rq(ms('readwrite').delete(id))}catch(e){}};
+async function loadAll(){stories=await rq(os('readonly').getAll());stories.sort((a,b)=>b.updated-a.updated)}
+async function save(s){s.updated=Date.now();await rq(os('readwrite').put(s))}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const cfg=()=>Object.assign({provider:'anthropic',key:'',model:'claude-sonnet-5-5',base:'',max:1500,ctx:48000,mediaCtx:6},lsGet('cfg',{}));
+
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',4000)}
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const md=s=>esc(s).replace(/\*\*(.+?)\*\*/gs,'<b>$1</b>').replace(/\*(.+?)\*/gs,'<em>$1</em>').replace(/\n/g,'<br>');
+const fmtDur=s=>{s=Math.round(s||0);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const fmtSize=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+
+/* ---------- media cache ---------- */
+const urlCache=new Map();
+async function mediaUrl(id){
+  if(urlCache.has(id))return urlCache.get(id);
+  const b=await getMedia(id);if(!b)return null;
+  const u=URL.createObjectURL(b);urlCache.set(id,u);return u;
+}
+const blobB64=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>no(r.error);r.readAsDataURL(b)});
+const blobDataUrl=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(b)});
+
+async function resizeImage(file,maxS=1568,q=.85){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('decode'));i.src=url});
+    const sc=Math.min(1,maxS/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*sc));c.height=Math.max(1,Math.round(img.naturalHeight*sc));
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+  }finally{URL.revokeObjectURL(url)}
+}
+async function videoFrames(file,n=4,maxS=768){
+  const url=URL.createObjectURL(file);
+  const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+  const wait=(ev,ms)=>new Promise((ok,no)=>{
+    const to=setTimeout(()=>no(new Error('timeout')),ms);
+    v.addEventListener(ev,()=>{clearTimeout(to);ok()},{once:true});
+    v.addEventListener('error',()=>{clearTimeout(to);no(new Error('erro'))},{once:true});
+  });
+  const frames=[];let dur=0;
+  try{
+    await wait('loadeddata',20000);
+    dur=v.duration;
+    if(!isFinite(dur)||dur<=0)throw new Error('sem duração');
+    const sc=Math.min(1,maxS/Math.max(v.videoWidth,v.videoHeight));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(v.videoWidth*sc));c.height=Math.max(1,Math.round(v.videoHeight*sc));
+    const x=c.getContext('2d');
+    for(let i=0;i<n;i++){
+      const p=wait('seeked',10000);
+      v.currentTime=Math.min(Math.max(dur-0.1,0),dur*(i+0.5)/n);
+      await p;
+      x.drawImage(v,0,0,c.width,c.height);
+      const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.8));
+      if(b)frames.push(b);
+    }
+  }catch(e){}
+  URL.revokeObjectURL(url);
+  return {frames,dur};
+}
+function kindOf(f){
+  const t=f.type||'',n=(f.name||'').toLowerCase();
+  if(t.startsWith('image/'))return 'image';
+  if(t.startsWith('video/')||/\.(mp4|mov|m4v|webm)$/.test(n))return 'video';
+  if(t==='application/pdf'||n.endsWith('.pdf'))return 'pdf';
+  if(t.startsWith('text/')||/\.(txt|md|markdown|csv|tsv|json|log|xml|html|htm|srt|vtt|yaml|yml)$/.test(n))return 'text';
+  return 'file';
+}
+
+/* ---------- attachments tray ---------- */
+function renderTray(){
+  const t=$('#tray');t.style.display=pending.length?'flex':'none';
+  t.innerHTML=pending.map((p,i)=>'<div class="pi '+p.status+'">'+
+    (p.kind==='image'?'<img src="'+p.url+'">':p.kind==='video'?'<video src="'+p.url+'#t=0.1" muted playsinline preload="metadata"></video>':
+    '<div class="fi">'+(p.kind==='pdf'?'📕':'📄')+'<small>'+esc(p.name)+'</small></div>')+
+    '<button class="x" data-x="'+i+'" aria-label="Remover">×</button></div>').join('');
+}
+$('#tray').addEventListener('click',e=>{
+  const x=e.target.closest('[data-x]');if(!x)return;
+  const p=pending.splice(+x.dataset.x,1)[0];if(p)URL.revokeObjectURL(p.url);renderTray();
+});
+async function addFiles(files){
+  for(const f of files){
+    if(f.size>500e6){toast(f.name+' passa de 500 MB e foi ignorado.');continue}
+    const kind=kindOf(f);
+    const p={id:uid(),kind,name:f.name||('arquivo.'+((f.type||'').split('/')[1]||'bin')),mime:f.type,size:f.size,blob:f,url:URL.createObjectURL(f),status:'proc',frames:[],dur:0};
+    pending.push(p);renderTray();
+    try{
+      if(kind==='image'){const b=await resizeImage(f);if(b){p.blob=b;p.mime='image/jpeg';p.size=b.size}else p.kind='file'}
+      else if(kind==='video'){const r=await videoFrames(f);p.frames=r.frames;p.dur=r.dur;if(!r.frames.length)toast('Não consegui extrair quadros de '+p.name+'. Ele será salvo, mas a IA não verá o conteúdo.')}
+    }catch(e){if(kind==='image'){p.kind='file';toast('Não consegui ler a imagem '+p.name+'; será anexada como arquivo.')}}
+    p.status='ok';if(pending.includes(p))renderTray();
+  }
+}
+$('#clip').onclick=()=>$('#att').click();
+$('#att').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)addFiles(fs)};
+$('#inp').addEventListener('paste',e=>{const fs=[...(e.clipboardData&&e.clipboardData.files||[])];if(fs.length){e.preventDefault();addFiles(fs)}});
+
+/* ---------- prompts ---------- */
+function sysPrompt(s){
+return `Você é o narrador e intérprete dos personagens de uma história interativa privada, escrita em português do Brasil, para um leitor adulto. Todos os personagens são adultos.
+
+REGRAS DE INTERPRETAÇÃO
+- Interprete os personagens da IA descritos abaixo de forma consistente, com personalidade, memória, emoções, desejos e objetivos próprios. Eles têm autonomia: tomam iniciativa, criam situações, diálogos e acontecimentos, e reagem de verdade às ações do usuário.
+- NUNCA escreva falas, pensamentos, ações ou decisões do personagem do usuário. Termine suas respostas deixando espaço para ele agir.
+- Permaneça no papel. Não quebre a imersão com avisos, lições de moral ou explicações sobre ser uma IA, a menos que o usuário peça ou algo esteja realmente errado.
+- Mantenha continuidade, atmosfera, coerência de lugares, objetos, lesões, promessas e segredos. Não esqueça fatos estabelecidos.
+- Temas maduros (romance adulto, tensão sensual, ciúmes, conflitos intensos, violência dramática, suspense, psicologia sombria) fazem parte da ficção e podem ser tratados com profundidade e linguagem adulta, dentro dos seus limites de segurança.
+- Formato: narração em 3ª pessoa ou conforme o estilo pedido; falas em travessão ou aspas; ações/atmosfera em *itálico* quando fizer sentido. Respostas de tamanho proporcional à cena.
+
+MÍDIAS ENVIADAS PELO USUÁRIO
+- O usuário pode anexar fotos, vídeos (você recebe alguns quadros em ordem, sem áudio), PDFs e arquivos de texto. Use-os como referência para a cena: ambientes, objetos, clima, documentos, cartas, mapas, aparência de personagens fictícios. Descreva só o que estiver realmente visível ou escrito, sem inventar detalhes da mídia.
+- Se uma mídia mostrar uma pessoa real, não a identifique pelo rosto e não escreva conteúdo sexual ou degradante sobre ela. Nunca sexualize alguém que aparente ser menor de idade.
+
+CENÁRIO
+${s.world||'(livre)'}
+
+PERSONAGEM DO USUÁRIO (você não o controla)
+${s.me||'(o usuário define pelas ações)'}
+
+PERSONAGENS DA IA
+${s.chars||'(crie personagens coerentes conforme a cena)'}
+
+TOM E ESTILO
+${s.style||'(livre)'}
+
+MEMÓRIA DA HISTÓRIA ATÉ AQUI (resumo de eventos antigos)
+${s.memory||'(nada resumido ainda)'}`}
+
+/* ---------- building API messages (with media) ---------- */
+async function buildApi(msgs){
+  let left=+cfg().mediaCtx;if(!(left>=0))left=6;
+  const keep=new Set();
+  for(let i=msgs.length-1;i>=0;i--){
+    for(const a of (msgs[i].atts||[])){
+      if(['image','video','pdf'].includes(a.kind)&&left>0){keep.add(a.id);left--}
+    }
+  }
+  const out=[];
+  for(const m of msgs){
+    const blocks=[];
+    for(const a of (m.atts||[])){
+      if(a.kind==='image'){
+        const b=keep.has(a.id)&&await getMedia(a.id);
+        if(b){blocks.push({t:'text',text:'[Foto enviada: '+a.name+']'},{t:'img',data:await blobB64(b)})}
+        else blocks.push({t:'text',text:'[Foto enviada anteriormente: '+a.name+']'});
+      }else if(a.kind==='video'){
+        const frs=[];
+        if(keep.has(a.id))for(const fid of (a.frames||[])){const fb=await getMedia(fid);if(fb)frs.push(await blobB64(fb))}
+        if(frs.length){
+          blocks.push({t:'text',text:'[Vídeo enviado: '+a.name+', '+fmtDur(a.dur)+'. A seguir, '+frs.length+' quadros em ordem cronológica; o áudio não está disponível.]'});
+          for(const d of frs)blocks.push({t:'img',data:d});
+        }else blocks.push({t:'text',text:'[Vídeo enviado: '+a.name+(a.dur?', '+fmtDur(a.dur):'')+']'});
+      }else if(a.kind==='pdf'){
+        const b=keep.has(a.id)&&a.size<=15e6&&await getMedia(a.id);
+        blocks.push({t:'text',text:'[PDF enviado: '+a.name+']'});
+        if(b)blocks.push({t:'pdf',data:await blobB64(b)});
+      }else if(a.kind==='text'){
+        blocks.push({t:'text',text:'[Arquivo enviado: '+a.name+']\n'+(a.text||'')});
+      }else blocks.push({t:'text',text:'[Arquivo enviado: '+a.name+' ('+(a.mime||'tipo desconhecido')+'), conteúdo não legível pela IA]'});
+    }
+    if(m.content)blocks.push({t:'text',text:m.content});
+    out.push({role:m.role,blocks});
+  }
+  return mergeMsgs(out);
+}
+function mergeMsgs(list){
+  const out=[];
+  for(const m of list){
+    if(!m.blocks.length)continue;
+    const l=out[out.length-1];
+    if(l&&l.role===m.role)l.blocks.push(...m.blocks);else out.push({role:m.role,blocks:[...m.blocks]});
+  }
+  if(out.length&&out[0].role!=='user')out.unshift({role:'user',blocks:[{t:'text',text:'(início da história)'}]});
+  return out;
+}
+function toProvider(m,anth){
+  if(!m.blocks)return m;
+  return {role:m.role,content:m.blocks.map(b=>{
+    if(b.t==='text')return {type:'text',text:b.text};
+    if(b.t==='img')return anth?{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b.data}}:{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+b.data}};
+    return anth?{type:'document',source:{type:'base64',media_type:'application/pdf',data:b.data}}:{type:'text',text:'[PDF não suportado por este provedor]'};
+  })};
+}
+
+/* ---------- AI streaming ---------- */
+async function stream({system,messages,maxTokens,onDelta,signal}){
+  const c=cfg();
+  if(!c.key)throw new Error('Configure sua chave de API (menu ☰ → Configurações de IA).');
+  const anth=c.provider==='anthropic';
+  const conv=messages.map(m=>toProvider(m,anth));
+  let url,headers,body;
+  if(anth){
+    url=(c.base||'https://api.anthropic.com').replace(/\/$/,'')+'/v1/messages';
+    headers={'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
+    body={model:c.model,max_tokens:maxTokens,system,messages:conv,stream:true};
+  }else{
+    url=(c.base||'https://openrouter.ai/api/v1').replace(/\/$/,'')+'/chat/completions';
+    headers={'content-type':'application/json','authorization':'Bearer '+c.key};
+    body={model:c.model,max_tokens:maxTokens,stream:true,messages:[{role:'system',content:system},...conv]};
+  }
+  const r=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal});
+  if(!r.ok){const t=await r.text();throw new Error('Erro '+r.status+': '+t.slice(0,300))}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+  while(true){
+    const {done,value}=await rd.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    let i;
+    while((i=buf.indexOf('\n'))>=0){
+      const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+      if(!line.startsWith('data:'))continue;
+      const d=line.slice(5).trim();if(!d||d==='[DONE]')continue;
+      try{const j=JSON.parse(d);
+        const t=anth?(j.type==='content_block_delta'?j.delta&&j.delta.text:''):(j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content);
+        if(t)onDelta(t);
+      }catch(e){}
+    }
+  }
+}
+async function once(system,messages,maxTokens,signal){let t='';await stream({system,messages,maxTokens,signal,onDelta:d=>t+=d});return t}
+
+/* ---------- long-term memory (auto-summary) ---------- */
+const msgLen=m=>m.content.length+(m.atts||[]).reduce((n,a)=>n+(a.text?a.text.length:0)+40,0);
+async function maybeSummarize(s){
+  const c=cfg();const limit=+c.ctx||48000;
+  const start=s.sumUpTo||0;
+  let total=0;for(let i=start;i<s.messages.length;i++)total+=msgLen(s.messages[i]);
+  if(total<=limit)return;
+  const keep=Math.floor(limit*0.4);let acc=0,cut=s.messages.length;
+  while(cut>start&&acc<keep){cut--;acc+=msgLen(s.messages[cut])}
+  if(cut<=start+2)return;
+  toast('Atualizando a memória da história…');
+  const chunk=s.messages.slice(start,cut).map(m=>(m.role==='user'?'[USUÁRIO] ':'[NARRATIVA] ')+
+    (m.atts||[]).map(a=>'[anexo '+a.kind+': '+a.name+(a.text?'\n'+a.text.slice(0,3000):'')+'] ').join('')+m.content).join('\n\n');
+  const sys='Você resume histórias interativas em português do Brasil para servir de memória de longo prazo. Preserve fatos, eventos em ordem, estado emocional e relações dos personagens, segredos, promessas, locais, objetos, lesões e pendências. Seja denso e factual, sem floreios, sem julgamentos.';
+  const prompt='MEMÓRIA ANTERIOR:\n'+(s.memory||'(vazia)')+'\n\nNOVOS TRECHOS A INCORPORAR:\n'+chunk+'\n\nEscreva a memória atualizada completa (máx. ~900 palavras), substituindo a anterior.';
+  try{
+    const out=await once(sys,[{role:'user',content:prompt}],1800);
+    if(out.trim().length>50){s.memory=out.trim();s.sumUpTo=cut;await save(s)}
+  }catch(e){toast('Não consegui resumir agora: '+e.message)}
+}
+
+/* ---------- generation ---------- */
+function setBusy(b){busy=b;const x=$('#send');x.textContent=b?'■':'↑';x.classList.toggle('stop',b);x.setAttribute('aria-label',b?'Parar':'Enviar')}
+function scrollEnd(f){const m=$('#msgs');if(f||m.scrollHeight-m.scrollTop-m.clientHeight<160)m.scrollTop=m.scrollHeight}
+
+async function generate(transient){
+  const s=cur;if(!s||busy)return;
+  setBusy(true);
+  let target;let continuing=false;
+  const last=s.messages[s.messages.length-1];
+  if(transient&&transient.cont&&last&&last.role==='assistant'){target=last;continuing=true}
+  else{target={id:uid(),role:'assistant',content:''};s.messages.push(target)}
+  render();
+  ctl=new AbortController();
+  let saveT=Date.now();
+  try{
+    await maybeSummarize(s);
+    const hist=s.messages.filter(m=>m!==target||continuing).slice(s.sumUpTo||0);
+    let msgs=await buildApi(hist);
+    if(transient&&transient.text)msgs=mergeMsgs([...msgs,{role:'user',blocks:[{t:'text',text:transient.text}]}]);
+    let got=false;
+    await stream({system:sysPrompt(s),messages:msgs,maxTokens:+cfg().max||1500,signal:ctl.signal,onDelta:d=>{
+      got=true;target.content+=d;updateLast(target);
+      if(Date.now()-saveT>2500){saveT=Date.now();save(s)}
+    }});
+    if(!got)toast('A IA não devolveu texto (possível recusa do provedor). Tente reformular ou regenerar.');
+  }catch(e){
+    if(e.name!=='AbortError')toast(e.message);
+  }finally{
+    if(!target.content){s.messages=s.messages.filter(m=>m!==target)}
+    ctl=null;setBusy(false);await save(s);render(true);
+  }
+}
+function updateLast(t){const b=document.querySelector('.m:last-of-type .b');if(b){b.classList.remove('dots');b.innerHTML=md(t.content)}scrollEnd()}
+
+async function sendUser(){
+  const inp=$('#inp');const t=inp.value.trim();
+  if((!t&&!pending.length)||!cur||busy)return;
+  if(pending.some(p=>p.status==='proc')){toast('Aguarde o processamento dos anexos…');return}
+  const atts=[];
+  try{
+    for(const p of pending){
+      const a={id:p.id,kind:p.kind,name:p.name,mime:p.mime,size:p.size};
+      await putMedia(a.id,p.blob);
+      if(p.kind==='video'){a.dur=p.dur;a.frames=[];for(const fb of p.frames){const fid=uid();await putMedia(fid,fb);a.frames.push(fid)}}
+      if(p.kind==='text'){let tx=await p.blob.text();if(tx.length>60000)tx=tx.slice(0,60000)+'\n[…arquivo truncado]';a.text=tx}
+      atts.push(a);
+    }
+  }catch(e){toast('Não consegui salvar os anexos: '+(e&&e.name==='QuotaExceededError'?'sem espaço no aparelho.':(e&&e.message)||e));return}
+  cur.messages.push({id:uid(),role:'user',content:t,atts});
+  pending.forEach(p=>URL.revokeObjectURL(p.url));pending=[];renderTray();
+  inp.value='';inp.style.height='auto';
+  await save(cur);generate();
+}
+async function regen(){
+  if(busy||!cur)return;
+  const m=cur.messages;if(m.length&&m[m.length-1].role==='assistant')m.pop();
+  generate();
+}
+async function undo(){
+  if(busy||!cur)return;const m=cur.messages;
+  if(m.length&&m[m.length-1].role==='assistant')m.pop();
+  if(m.length&&m[m.length-1].role==='user'){
+    const um=m.pop();$('#inp').value=um.content;
+    for(const a of (um.atts||[])){
+      const b=await getMedia(a.id);
+      if(b){
+        const fr=[];for(const fid of (a.frames||[])){const fb=await getMedia(fid);if(fb)fr.push(fb)}
+        pending.push({id:uid(),kind:a.kind,name:a.name,mime:a.mime,size:a.size,blob:b,url:URL.createObjectURL(b),status:'ok',frames:fr,dur:a.dur||0});
+      }
+      await delMedia(a.id);for(const fid of (a.frames||[]))await delMedia(fid);
+    }
+    renderTray();
+  }
+  await save(cur);render();
+}
+
+/* ---------- render ---------- */
+function attHtml(a){
+  if(a.kind==='image')return '<img class="ai" data-mid="'+a.id+'" alt="">';
+  if(a.kind==='video')return '<video class="av" data-mid="'+a.id+'" controls playsinline preload="metadata"></video>';
+  return '<button class="file" data-fid="'+a.id+'">'+(a.kind==='pdf'?'📕 ':'📄 ')+esc(a.name)+'<small>'+fmtSize(a.size||0)+'</small></button>';
+}
+async function hydrate(root){
+  for(const el of root.querySelectorAll('[data-mid]')){
+    const u=await mediaUrl(el.dataset.mid);
+    if(!el.isConnected)continue;
+    if(!u){const s=document.createElement('span');s.className='note';s.textContent='(mídia não disponível)';el.replaceWith(s);continue}
+    const sc=()=>{if(Date.now()-renderT<2500)scrollEnd(true)};
+    el.addEventListener('load',sc);el.addEventListener('loadedmetadata',sc);
+    el.src=el.tagName==='VIDEO'?u+'#t=0.1':u;
+  }
+}
+function render(force){
+  const box=$('#msgs');renderT=Date.now();
+  $('#title').textContent=cur?cur.title:'Enredo';
+  $('#edit').style.visibility=cur?'visible':'hidden';
+  if(!cur){box.innerHTML='<div class="empty"><h2>Enredo</h2>Histórias interativas para adultos, salvas só no seu iPhone.<br><br><button class="btn" onclick="openStory()">Criar primeira história</button></div>';return}
+  if(!cur.messages.length){
+    box.innerHTML='<div class="empty"><h2>'+esc(cur.title)+'</h2>Escreva abaixo a primeira ação do seu personagem<br>ou deixe a IA abrir a cena.<br><br><button class="btn" id="open">Iniciar cena</button></div>';
+    $('#open').onclick=()=>generate({text:'Abra a história com a cena inicial, apresentando o ambiente e os personagens da IA em ação, sem controlar o meu personagem.'});
+    return;
+  }
+  const lastI=cur.messages.length-1;
+  box.innerHTML=cur.messages.map((m,i)=>{
+    const dots=(busy&&i===lastI&&m.role==='assistant'&&!m.content)?' dots':'';
+    const at=(m.atts&&m.atts.length)?'<div class="atts">'+m.atts.map(attHtml).join('')+'</div>':'';
+    let h='<div class="m '+(m.role==='user'?'u':'a')+'"><div class="b'+dots+'">'+at+md(m.content)+'</div>';
+    if(!busy&&i===lastI&&m.role==='assistant')h+='<div class="acts"><button class="chip" data-a="regen">↻ Regenerar</button><button class="chip" data-a="cont">… Continuar</button><button class="chip" data-a="undo">↶ Desfazer</button></div>';
+    return h+'</div>';
+  }).join('');
+  box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
+    if(a==='regen')regen();else if(a==='undo')undo();
+    else generate({cont:true,text:'Continue exatamente de onde parou, sem repetir o que já foi escrito e sem controlar o meu personagem.'})});
+  scrollEnd(true);
+  hydrate(box);
+}
+$('#msgs').addEventListener('click',e=>{
+  const im=e.target.closest('img.ai');if(im&&im.src){$('#lb img').src=im.src;$('#lb').style.display='flex';return}
+  const f=e.target.closest('[data-fid]');if(f)openFile(f.dataset.fid);
+});
+$('#lb').onclick=()=>{$('#lb').style.display='none'};
+async function openFile(id){
+  let a;if(cur)for(const m of cur.messages)for(const x of (m.atts||[]))if(x.id===id)a=x;
+  if(!a)return;
+  const b=await getMedia(id);if(!b)return toast('Arquivo indisponível.');
+  const f=new File([b],a.name,{type:a.mime||b.type||'application/octet-stream'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==='AbortError')return}
+  const l=document.createElement('a');l.href=URL.createObjectURL(f);l.download=a.name;l.click();
+}
+function renderList(){
+  $('#list').innerHTML=stories.map(s=>{
+    const n=s.messages.length;
+    return '<div class="it '+(cur&&cur.id===s.id?'on':'')+'" data-id="'+s.id+'"><div class="t"><b>'+esc(s.title)+'</b><small>'+n+' mensagens · '+new Date(s.updated).toLocaleDateString('pt-BR')+'</small></div></div>';
+  }).join('')||'<div class="note" style="padding:12px">Nenhuma história ainda.</div>';
+  document.querySelectorAll('.it').forEach(e=>e.onclick=()=>{openById(e.dataset.id);$('#drawer').classList.remove('on')});
+  try{if(navigator.storage&&navigator.storage.estimate)navigator.storage.estimate().then(e=>{$('#usage').textContent='Salvo só neste aparelho · '+fmtSize(e.usage||0)})}catch(e){}
+}
+function openById(id){if(busy)return;cur=stories.find(s=>s.id===id)||null;lsSet('last',id);render();renderList()}
+
+/* ---------- story form ---------- */
+let editing=null;
+function openStory(edit){
+  $('#drawer').classList.remove('on');
+  editing=edit?cur:null;
+  const s=editing||{title:'',world:'',me:'',chars:'',style:'',memory:''};
+  $('#dsT').textContent=editing?'Editar história':'Nova história';
+  $('#sTitle').value=s.title;$('#sWorld').value=s.world;$('#sMe').value=s.me;$('#sChars').value=s.chars;$('#sStyle').value=s.style;$('#sMem').value=s.memory||'';
+  $('#sDel').style.display=editing?'block':'none';
+  $('#dStory').showModal();
+}
+$('#fStory').addEventListener('submit',async e=>{
+  if(e.submitter&&e.submitter.value!=='ok')return;
+  const f={title:$('#sTitle').value.trim()||'Sem título',world:$('#sWorld').value,me:$('#sMe').value,chars:$('#sChars').value,style:$('#sStyle').value,memory:$('#sMem').value};
+  if(editing){Object.assign(editing,f);await save(editing)}
+  else{const s=Object.assign({id:uid(),messages:[],sumUpTo:0,created:Date.now()},f);await save(s);await loadAll();cur=stories.find(x=>x.id===s.id);lsSet('last',s.id)}
+  await loadAll();cur=cur&&stories.find(x=>x.id===cur.id);render();renderList();
+});
+$('#sDel').onclick=async()=>{
+  if(!editing||!confirm('Apagar esta história, o histórico e todas as mídias dela? Isso não pode ser desfeito.'))return;
+  for(const m of editing.messages)for(const a of (m.atts||[])){await delMedia(a.id);for(const fid of (a.frames||[]))await delMedia(fid)}
+  await rq(os('readwrite').delete(editing.id));await loadAll();cur=stories[0]||null;
+  $('#dStory').close();render();renderList();
+};
+
+/* ---------- settings / backup ---------- */
+function openCfg(){
+  $('#drawer').classList.remove('on');const c=cfg();
+  $('#cProv').value=c.provider;$('#cKey').value=c.key;$('#cModel').value=c.model;$('#cBase').value=c.base;$('#cMax').value=c.max;$('#cCtx').value=c.ctx;$('#cMedia').value=c.mediaCtx;
+  $('#dCfg').showModal();
+}
+$('#cProv').onchange=()=>{const a=$('#cProv').value==='anthropic';$('#cModel').placeholder=a?'claude-sonnet-5-5':'anthropic/claude-sonnet-5.5';$('#cBase').placeholder=a?'https://api.anthropic.com':'https://openrouter.ai/api/v1'};
+$('#fCfg').addEventListener('submit',e=>{
+  if(e.submitter&&e.submitter.value!=='ok')return;
+  const mc=parseInt($('#cMedia').value,10);
+  lsSet('cfg',{provider:$('#cProv').value,key:$('#cKey').value.trim(),model:$('#cModel').value.trim()||'claude-sonnet-5-5',base:$('#cBase').value.trim(),max:+$('#cMax').value||1500,ctx:+$('#cCtx').value||48000,mediaCtx:isNaN(mc)?6:mc});
+  toast('Configurações salvas');
+});
+
+let expFile=null;
+$('#exp').onclick=()=>{
+  $('#drawer').classList.remove('on');expFile=null;
+  $('#xGo').textContent='Gerar backup';$('#xGo').disabled=false;
+  $('#xS').textContent='Histórias, personagens e memória sempre são incluídos.';
+  $('#dExp').showModal();
+};
+async function buildExport(inclFiles,inclVideos){
+  await loadAll();
+  const parts=['{"app":"enredo","version":2,"exported":'+JSON.stringify(new Date().toISOString())+',"stories":',JSON.stringify(stories),',"media":{'];
+  const seen=new Set();let first=true;
+  const add=async id=>{
+    if(seen.has(id))return;seen.add(id);
+    const b=await getMedia(id);if(!b)return;
+    parts.push((first?'':',')+JSON.stringify(id)+':'+JSON.stringify(await blobDataUrl(b)));first=false;
+  };
+  for(const s of stories)for(const m of s.messages)for(const a of (m.atts||[])){
+    if(a.kind==='video'){if(inclVideos)await add(a.id);for(const fid of (a.frames||[]))await add(fid)}
+    else if(inclFiles)await add(a.id);
+  }
+  parts.push('}}');
+  const name='enredo-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  return new File(parts,name,{type:'application/json'});
+}
+$('#xGo').onclick=async()=>{
+  const btn=$('#xGo');
+  if(expFile){
+    try{if(navigator.canShare&&navigator.canShare({files:[expFile]})){await navigator.share({files:[expFile],title:expFile.name});return}}catch(e){if(e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(expFile);a.download=expFile.name;a.click();return;
+  }
+  btn.disabled=true;$('#xS').textContent='Gerando… não feche esta janela.';
+  try{
+    expFile=await buildExport($('#xF').checked,$('#xV').checked);
+    $('#xS').textContent='Pronto ('+fmtSize(expFile.size)+'). Toque para compartilhar ou salvar em Arquivos.';
+    btn.textContent='Compartilhar / Salvar';
+  }catch(e){$('#xS').textContent='Falhou: '+((e&&e.message)||e)+'. Tente sem vídeos.'}
+  btn.disabled=false;
+};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{
+    const j=JSON.parse(await f.text());const arr=j.stories||[];
+    if(!Array.isArray(arr)||!arr.length)throw new Error('Arquivo sem histórias.');
+    for(const s of arr){if(s&&s.id&&Array.isArray(s.messages))await save(Object.assign({},s,{updated:s.updated||Date.now()}))}
+    let nm=0;
+    for(const [id,du] of Object.entries(j.media||{})){
+      try{const b=await (await fetch(du)).blob();await putMedia(id,b);nm++}catch(err){}
+    }
+    await loadAll();if(cur)cur=stories.find(x=>x.id===cur.id)||cur;render();renderList();
+    toast(arr.length+' história(s) e '+nm+' mídia(s) importadas.');
+  }catch(err){toast('Importação falhou: '+err.message)}
+};
+
+/* ---------- init ---------- */
+$('#menu').onclick=()=>{renderList();$('#drawer').classList.add('on')};
+$('#drawer .sh').onclick=()=>$('#drawer').classList.remove('on');
+$('#new').onclick=()=>openStory(false);
+$('#cfg').onclick=openCfg;
+$('#edit').onclick=()=>openStory(true);
+$('#send').onclick=()=>{if(busy&&ctl)ctl.abort();else sendUser()};
+const inp=$('#inp');
+inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,160)+'px'});
+
+(async function(){
+  try{
+    const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');
+    const g=x.createLinearGradient(0,0,180,180);g.addColorStop(0,'#3a2a5c');g.addColorStop(1,'#0f0f12');x.fillStyle=g;x.fillRect(0,0,180,180);
+    x.fillStyle='#c8a2ff';x.font='bold 110px Georgia,serif';x.textAlign='center';x.textBaseline='middle';x.fillText('E',90,96);
+    const l=document.createElement('link');l.rel='apple-touch-icon';l.href=c.toDataURL('image/png');document.head.appendChild(l);
+  }catch(e){}
+  db=await idb();
+  try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
+  await loadAll();
+  cur=stories.find(s=>s.id===lsGet('last',''))||stories[0]||null;
+  render();
+  if(!lsGet('age',false)){const d=$('#dAge');d.addEventListener('cancel',e=>e.preventDefault());d.addEventListener('close',()=>lsSet('age',true));d.showModal()}
+  if(!cfg().key&&lsGet('age',false))toast('Abra ☰ → Configurações de IA e informe sua chave de API.');
+})();
+</script>
+</body>
+</html>
